@@ -12,14 +12,13 @@ import {
   X,
   FileText
 } from 'lucide-react';
-import LoginModal from './auth/LoginModal';
-import RegisterModal from './auth/RegisterModal';
+import AuthModal from './auth/AuthModal';
 
 const Header = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
@@ -27,6 +26,11 @@ const Header = () => {
     logout();
     setShowUserMenu(false);
     navigate('/');
+  };
+
+  const openAuthModal = (mode) => {
+    setAuthMode(mode);
+    setShowAuthModal(true);
   };
 
   return (
@@ -39,35 +43,17 @@ const Header = () => {
             <span className="text-xl font-bold text-gray-900">JobPortal</span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
-            <Link 
-              to="/jobs" 
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              Find Jobs
-            </Link>
-            {isAuthenticated && user?.role === 'recruiter' && (
-              <Link 
-                to="/companies" 
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-              >
-                Companies
-              </Link>
-            )}
-          </nav>
-
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
             {!isAuthenticated ? (
               <>
                 <Button 
                   variant="ghost" 
-                  onClick={() => setShowLoginModal(true)}
+                  onClick={() => openAuthModal('login')}
                 >
                   Sign In
                 </Button>
-                <Button onClick={() => setShowRegisterModal(true)}>
+                <Button onClick={() => openAuthModal('register')}>
                   Sign Up
                 </Button>
               </>
@@ -167,31 +153,13 @@ const Header = () => {
         {showMobileMenu && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 border-t border-gray-200">
-              <Link
-                to="/jobs"
-                className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900"
-                onClick={() => setShowMobileMenu(false)}
-              >
-                Find Jobs
-              </Link>
-              
-              {isAuthenticated && user?.role === 'recruiter' && (
-                <Link
-                  to="/companies"
-                  className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900"
-                  onClick={() => setShowMobileMenu(false)}
-                >
-                  Companies
-                </Link>
-              )}
-
               {!isAuthenticated ? (
                 <div className="space-y-2 pt-4">
                   <Button
                     variant="ghost"
                     className="w-full justify-start"
                     onClick={() => {
-                      setShowLoginModal(true);
+                      openAuthModal('login');
                       setShowMobileMenu(false);
                     }}
                   >
@@ -200,7 +168,7 @@ const Header = () => {
                   <Button
                     className="w-full"
                     onClick={() => {
-                      setShowRegisterModal(true);
+                      openAuthModal('register');
                       setShowMobileMenu(false);
                     }}
                   >
@@ -263,11 +231,11 @@ const Header = () => {
       </div>
 
       {/* Modals */}
-      {showLoginModal && (
-        <LoginModal onClose={() => setShowLoginModal(false)} />
-      )}
-      {showRegisterModal && (
-        <RegisterModal onClose={() => setShowRegisterModal(false)} />
+      {showAuthModal && (
+        <AuthModal 
+          onClose={() => setShowAuthModal(false)} 
+          initialMode={authMode}
+        />
       )}
     </header>
   );

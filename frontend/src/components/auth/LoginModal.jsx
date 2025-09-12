@@ -81,6 +81,7 @@ const LoginModal = ({ onClose }) => {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter your password"
+              autoComplete="new-password"
               required
             />
           </div>
