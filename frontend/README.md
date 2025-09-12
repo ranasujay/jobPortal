@@ -76,7 +76,7 @@ frontend/
 ### Prerequisites
 - Node.js (v18 or higher)
 - npm or yarn
-- Backend API running on `http://localhost:5000`
+- Backend API server running
 
 ### Installation
 
@@ -97,7 +97,7 @@ frontend/
 
 4. **Open application**
    ```
-   http://localhost:5173
+   The application will open in your default browser
    ```
 
 ### Available Scripts
@@ -399,18 +399,28 @@ dist/
 
 #### Vercel (Recommended)
 ```bash
+# Install Vercel CLI and deploy
 npm i -g vercel
 vercel --prod
 ```
 
 #### Netlify
 ```bash
+# Build and deploy
 npm run build
-# Upload dist/ folder to Netlify
+# Upload dist/ folder to Netlify or connect GitHub
+```
+
+#### Custom Server
+```bash
+# Build for production
+npm run build
+# Serve static files from dist/ directory
 ```
 
 #### Docker
 ```dockerfile
+# Multi-stage build for production
 FROM node:18-alpine as build
 WORKDIR /app
 COPY package*.json ./
@@ -418,8 +428,10 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
+# Production stage
 FROM nginx:alpine
 COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80
 ```
 
 ## 🧪 Testing (Future Enhancement)
@@ -458,30 +470,32 @@ src/
 
 ### Common Issues
 
-**Vite server not starting:**
+**Development server not starting:**
 ```bash
-Error: Port 5173 is already in use
+Error: Port already in use
 ```
 - Change port: `npm run dev -- --port 3000`
-- Kill process: `lsof -ti:5173 | xargs kill` (macOS/Linux)
+- Stop conflicting processes
+- Check system configuration
 
-**Tailwind styles not working:**
+**Styling issues:**
 ```bash
-# Reinstall Tailwind
+# Reinstall styling dependencies
 npm uninstall tailwindcss postcss autoprefixer
 npm install -D tailwindcss postcss autoprefixer
 npx tailwindcss init -p
 ```
 
 **API connection issues:**
-- Check backend server is running on port 5000
-- Verify CORS configuration in backend
+- Check backend server is running
+- Verify API configuration
 - Check network connectivity
 
 **Authentication issues:**
 ```javascript
-// Clear localStorage
-localStorage.removeItem('token');
+// Clear browser storage
+localStorage.clear();
+sessionStorage.clear();
 // Refresh the page
 ```
 

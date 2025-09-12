@@ -57,59 +57,70 @@ backend/
    npm install
    ```
 
-3. **Create environment file**
+3. **Create and configure environment file**
    ```bash
-   cp .env.example .env
+   # Create environment configuration file
+   # Contact system administrator for production values
    ```
 
-4. **Configure environment variables** (see [Environment Variables](#environment-variables))
+4. **Configure environment variables** (see [Configuration](#configuration))
 
 5. **Start development server**
    ```bash
    npm run dev
    ```
 
-The API will be available at `http://localhost:5000`
+The API will be available on the configured port.
 
-## ⚙️ Environment Variables
+## ⚙️ Configuration
 
-Create a `.env` file in the backend directory with the following variables:
+The application requires environment configuration for:
 
-```env
-# Server Configuration
-NODE_ENV=development
-PORT=5000
+### Server Configuration
+- Application environment (development/production)
+- Server port configuration
+- Application secrets and keys
 
-# Database Configuration
-MONGODB_URI=mongodb://localhost:27017/jobportal
+### Database Configuration
+- Database connection string
+- Database authentication credentials
+- Connection pool settings
 
-# JWT Configuration
-JWT_SECRET=your-super-secret-jwt-key-make-it-long-and-complex
-JWT_EXPIRE=7d
+### Authentication Configuration
+- JWT secret keys and expiration settings
+- Password hashing configuration
+- Session management settings
 
-# CORS Configuration
-FRONTEND_URL=http://localhost:5173
-```
+### Security Configuration
+- CORS allowed origins
+- Rate limiting settings
+- Security middleware configuration
 
-### MongoDB Setup
+**Important:** All sensitive configuration values should be provided through environment variables and never committed to version control.
 
-**Local MongoDB:**
-```bash
-# Install MongoDB Community Edition
-# Start MongoDB service
-mongod --dbpath /path/to/your/data/directory
-```
+### Database Setup
 
-**MongoDB Atlas (Cloud):**
-1. Create account at [MongoDB Atlas](https://www.mongodb.com/atlas)
-2. Create a new cluster
-3. Get connection string and add to `MONGODB_URI`
+The application uses MongoDB as the database. You can use either:
 
-## 📡 API Endpoints
+**Local MongoDB Installation:**
+- Install MongoDB Community Edition
+- Start MongoDB service
+- Configure connection string in environment variables
+
+**Cloud Database (Recommended for Production):**
+- Use MongoDB Atlas or similar cloud service
+- Create database cluster
+- Configure connection string with authentication
+
+## 📡 API Documentation
 
 ### Base URL
+The API is available at the configured base URL.
+
+### Authentication
+All protected routes require a valid JWT token in the Authorization header:
 ```
-http://localhost:5000/api
+Authorization: Bearer <token>
 ```
 
 ### Authentication Routes
@@ -204,7 +215,7 @@ Content-Type: application/json
 {
   "name": "John Doe",
   "email": "john@example.com",
-  "password": "password123",
+  "password": "securepassword",
   "role": "candidate"
 }
 ```
@@ -216,7 +227,7 @@ Content-Type: application/json
 
 {
   "email": "john@example.com",
-  "password": "password123"
+  "password": "securepassword"
 }
 ```
 
@@ -230,7 +241,7 @@ Content-Type: application/json
   "title": "Frontend Developer",
   "description": "We are looking for a skilled frontend developer...",
   "requirements": "3+ years experience with React...",
-  "location": "San Francisco, CA",
+  "location": "Remote",
   "salary_min": 80000,
   "salary_max": 120000,
   "job_type": "full-time",
@@ -242,7 +253,7 @@ Content-Type: application/json
 
 ### Search Jobs
 ```bash
-GET /api/jobs?search=developer&location=california&job_type=full-time&page=1&limit=10
+GET /api/jobs?search=developer&location=city&job_type=full-time&page=1&limit=10
 ```
 
 ## 🛡️ Security Features
@@ -303,12 +314,14 @@ npm test           # Run tests (not implemented yet)
 ## 🚀 Deployment
 
 ### Production Environment
-1. Set `NODE_ENV=production`
-2. Use production MongoDB instance
-3. Configure secure JWT secret
-4. Set up reverse proxy (nginx)
+1. Set appropriate environment configuration
+2. Use production database instance
+3. Configure secure authentication secrets
+4. Set up reverse proxy and load balancing
 5. Enable SSL/HTTPS
 6. Configure logging and monitoring
+7. Set up automated backups
+8. Configure security policies
 
 ### Docker Deployment (Optional)
 ```dockerfile
@@ -323,11 +336,18 @@ CMD ["npm", "start"]
 
 ## 📝 Logging
 
-The application uses Morgan for HTTP request logging in development:
-```
-GET /api/jobs 200 45.123 ms - 2847
-POST /api/auth/login 200 156.789 ms - 324
-```
+The application uses standard logging for HTTP requests and application events.
+
+**Development Logging:**
+- HTTP request logging
+- Error logging with stack traces
+- Debug information for development
+
+**Production Logging:**
+- Structured logging format
+- Error tracking and monitoring
+- Performance metrics
+- Security event logging
 
 ## 🤝 Contributing
 
@@ -348,28 +368,37 @@ POST /api/auth/login 200 156.789 ms - 324
 
 ### Common Issues
 
-**MongoDB Connection Error:**
+**Configuration Error:**
 ```bash
-Error: Cannot connect to MongoDB
+Error: Missing required configuration
 ```
-- Check if MongoDB is running
-- Verify connection string in `.env`
-- Ensure network connectivity
+- Check environment variables are set
+- Verify configuration file exists
+- Ensure all required values are provided
 
-**JWT Token Error:**
+**Database Connection Error:**
 ```bash
-Error: Invalid token
+Error: Cannot connect to database
 ```
-- Check JWT secret configuration
+- Check database server is running
+- Verify connection configuration
+- Ensure network connectivity and authentication
+
+**Authentication Error:**
+```bash
+Error: Invalid or missing token
+```
+- Check authentication configuration
 - Verify token format in Authorization header
 - Ensure token hasn't expired
 
-**Port Already in Use:**
+**Port Conflict:**
 ```bash
-Error: listen EADDRINUSE :::5000
+Error: Address already in use
 ```
-- Change PORT in `.env` file
-- Kill process using the port: `lsof -ti:5000 | xargs kill`
+- Change port in configuration
+- Stop conflicting processes
+- Check firewall settings
 
 ---
 

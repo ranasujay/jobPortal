@@ -68,7 +68,7 @@ jobPortal/
    ```bash
    cd backend
    npm install
-   cp .env.example .env  # Configure your environment variables
+   # Configure environment variables (see backend/README.md)
    npm run dev
    ```
 
@@ -80,22 +80,22 @@ jobPortal/
    ```
 
 4. **Access the Application**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:5000
+   - The application will be available in your browser
+   - Backend API will run on the configured port
 
-## ⚙️ Environment Variables
+## ⚙️ Configuration
 
-### Backend (.env)
-```env
-NODE_ENV=development
-PORT=5000
-MONGODB_URI=mongodb://localhost:27017/jobportal
-JWT_SECRET=your-super-secret-jwt-key
-JWT_EXPIRE=7d
-```
+### Backend Configuration
+The backend requires environment configuration for:
+- Database connection
+- Authentication secrets
+- Server settings
+- Security configurations
 
-### Frontend
-No additional environment variables required for development.
+### Frontend Configuration
+The frontend connects to the backend API and requires minimal configuration.
+
+**Note:** Detailed configuration instructions are provided in the respective backend and frontend directories.
 
 ## 📁 Project Structure
 
@@ -151,23 +151,22 @@ cd backend
 npm start
 ```
 
-## 🔧 API Endpoints
+## 🔧 API Overview
+
+The backend provides RESTful APIs for:
 
 ### Authentication
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
+- User registration and login
+- Role-based access control
 
 ### Jobs
-- `GET /api/jobs` - Get all jobs
-- `GET /api/jobs/:id` - Get specific job
-- `POST /api/jobs` - Create job (recruiter only)
-- `PUT /api/jobs/:id` - Update job (recruiter only)
-- `DELETE /api/jobs/:id` - Delete job (recruiter only)
+- Job listings and search
+- Job creation and management
+- Job applications
 
 ### Companies
-- `GET /api/companies` - Get all companies
-- `GET /api/companies/:id` - Get specific company
-- `POST /api/companies` - Create company (recruiter only)
+- Company profiles
+- Company-specific job listings
 
 For detailed API documentation, see [Backend README](./backend/README.md).
 
