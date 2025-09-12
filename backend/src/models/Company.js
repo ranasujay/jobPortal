@@ -26,7 +26,15 @@ const companySchema = new mongoose.Schema({
   },
   logo_url: {
     type: String,
-    default: 'https://via.placeholder.com/100x100?text=Logo'
+    default: function() {
+      // Generate a default logo URL based on company name initials
+      const initials = this.name 
+        ? this.name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
+        : 'CO';
+      
+      // Use a service that generates logos with initials and nice colors
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(this.name || 'Company')}&size=200&background=3b82f6&color=ffffff&bold=true&format=png`;
+    }
   },
   industry: {
     type: String,

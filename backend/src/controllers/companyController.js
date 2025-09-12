@@ -61,15 +61,6 @@ exports.createCompany = async (req, res) => {
     // Add user to req.body
     req.body.owner = req.user.id;
 
-    // Check if user already has a company
-    const existingCompany = await Company.findOne({ owner: req.user.id });
-    if (existingCompany) {
-      return res.status(400).json({
-        success: false,
-        message: 'You can only create one company profile'
-      });
-    }
-
     const company = await Company.create(req.body);
 
     res.status(201).json({
@@ -167,7 +158,30 @@ exports.deleteCompany = async (req, res) => {
   }
 };
 
-// @desc    Get current user's company
+// @desc    Get current user's companies
+// @route   GET /api/companies/my-companies
+// @access  Private
+exports.getMyCompanies = async (req, res) => {
+  try {
+    const companies = await Company.find({ owner: req.user.id })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: companies.length,
+      data: companies
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+// @desc    Get current user's company (single - for backward compatibility)
 // @route   GET /api/companies/my-company
 // @access  Private
 exports.getMyCompany = async (req, res) => {

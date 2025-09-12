@@ -10,7 +10,8 @@ import {
   PlusCircle,
   Menu,
   X,
-  FileText
+  FileText,
+  Building
 } from 'lucide-react';
 import AuthModal from './auth/AuthModal';
 
@@ -88,14 +89,24 @@ const Header = () => {
                       
                       <div className="py-1">
                         {user?.role === 'recruiter' && (
-                          <Link
-                            to="/my-jobs"
-                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            <Briefcase className="h-4 w-4 mr-3" />
-                            My Jobs
-                          </Link>
+                          <>
+                            <Link
+                              to="/my-jobs"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Briefcase className="h-4 w-4 mr-3" />
+                              My Jobs
+                            </Link>
+                            <Link
+                              to="/my-companies"
+                              className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              onClick={() => setShowUserMenu(false)}
+                            >
+                              <Building className="h-4 w-4 mr-3" />
+                              My Companies
+                            </Link>
+                          </>
                         )}
                         
                         {user?.role === 'candidate' && (
@@ -192,6 +203,13 @@ const Header = () => {
                         onClick={() => setShowMobileMenu(false)}
                       >
                         My Jobs
+                      </Link>
+                      <Link
+                        to="/my-companies"
+                        className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900"
+                        onClick={() => setShowMobileMenu(false)}
+                      >
+                        My Companies
                       </Link>
                     </>
                   )}

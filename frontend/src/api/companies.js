@@ -31,4 +31,16 @@ export const companiesAPI = {
     const response = await api.delete(`/api/companies/${companyId}`);
     return response.data;
   },
+
+  // Get current user's company
+  getMyCompany: async () => {
+    const response = await api.get('/api/companies/my-company');
+    return response.data.data;
+  },
+
+  // Get current user's companies (all companies owned by user)
+  getMyCompanies: async () => {
+    const response = await api.get('/api/companies/my-companies');
+    return response.data.data;
+  },
 };

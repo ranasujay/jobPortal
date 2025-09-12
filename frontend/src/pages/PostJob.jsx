@@ -71,7 +71,14 @@ const PostJob = () => {
       const response = await jobsAPI.createJob(jobData);
       
       if (response) {
-        alert('Job posted successfully!');
+        let successMessage = 'Job posted successfully!';
+        
+        // Check if a new company was created
+        if (response.companyCreated) {
+          successMessage += '\n\nA new company profile has been created. You can update the company details from "My Companies" section.';
+        }
+        
+        alert(successMessage);
         navigate('/my-jobs');
       }
     } catch (error) {
@@ -152,9 +159,12 @@ const PostJob = () => {
                 placeholder="e.g. Tech Solutions Inc."
                 className="w-full"
               />
-              <p className="text-sm text-gray-500 mt-1">
-                This will be used to create or update your company profile
-              </p>
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-700">
+                  <span className="font-medium">💡 Auto-Company Creation:</span> If this company doesn't exist in your profile, 
+                  we'll automatically create it for you. You can edit the company details later from "My Companies".
+                </p>
+              </div>
             </div>
 
             {/* Location and Job Type */}

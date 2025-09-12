@@ -92,23 +92,49 @@ exports.createJob = async (req, res) => {
     // Add user to req.body
     req.body.posted_by = req.user.id;
 
-    // Check if user has a company, if not create a default one
-    let company = await Company.findOne({ owner: req.user.id });
-    if (!company) {
-      // Create a company profile with the provided company name
-      const companyName = req.body.company_name || `${req.user.name}'s Company`;
-      company = await Company.create({
-        name: companyName,
-        description: 'Company profile to be updated',
-        owner: req.user.id,
-        location: req.body.location || 'Not specified',
-        industry: 'Technology', // Default industry
-        size: '1-10' // Default size
+    let company;
+    
+    if (req.body.company_name) {
+      // Check if company with this name already exists for this user
+      company = await Company.findOne({ 
+        name: req.body.company_name.trim(),
+        owner: req.user.id 
       });
-    } else if (req.body.company_name && req.body.company_name !== company.name) {
-      // Update existing company name if a new one is provided
-      company.name = req.body.company_name;
-      await company.save();
+      
+      if (!company) {
+        // Create new company with the provided name
+        const companyName = req.body.company_name.trim();
+        company = await Company.create({
+          name: companyName,
+          description: `Company profile for ${companyName}. Please update with more details.`,
+          location: req.body.location || 'Location to be updated',
+          industry: 'Industry to be specified',
+          size: '1-10',
+          logo_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&size=200&background=3b82f6&color=ffffff&bold=true&format=png`,
+          owner: req.user.id
+        });
+        
+        console.log(`Auto-created new company: ${company.name} for user: ${req.user.name}`);
+      }
+    } else {
+      // If no company name provided, check if user has any existing company
+      company = await Company.findOne({ owner: req.user.id });
+      
+      if (!company) {
+        // Create a default company
+        const defaultName = `${req.user.name}'s Company`;
+        company = await Company.create({
+          name: defaultName,
+          description: 'Default company profile. Please update with your company details.',
+          location: 'Location to be updated',
+          industry: 'Industry to be specified',
+          size: '1-10',
+          logo_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(defaultName)}&size=200&background=6b7280&color=ffffff&bold=true&format=png`,
+          owner: req.user.id
+        });
+        
+        console.log(`Auto-created default company for user: ${req.user.name}`);
+      }
     }
 
     req.body.company = company._id;
@@ -126,7 +152,8 @@ exports.createJob = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Job created successfully',
-      data: populatedJob
+      data: populatedJob,
+      companyCreated: company.createdAt.getTime() === company.updatedAt.getTime() // Indicates if company was just created
     });
 
   } catch (error) {

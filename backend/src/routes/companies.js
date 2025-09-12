@@ -5,7 +5,8 @@ const {
   createCompany,
   updateCompany,
   deleteCompany,
-  getMyCompany
+  getMyCompany,
+  getMyCompanies
 } = require('../controllers/companyController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -16,6 +17,7 @@ router.route('/')
   .post(protect, authorize('recruiter'), createCompany);
 
 router.get('/my-company', protect, authorize('recruiter'), getMyCompany);
+router.get('/my-companies', protect, authorize('recruiter'), getMyCompanies);
 
 router.route('/:id')
   .get(getCompany)

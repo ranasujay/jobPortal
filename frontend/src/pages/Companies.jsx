@@ -60,17 +60,14 @@ const Companies = () => {
             <Card key={company._id} className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardContent className="p-6">
                 <div className="flex items-center mb-4">
-                  {company.logo ? (
-                    <img
-                      src={company.logo}
-                      alt={company.name}
-                      className="h-16 w-16 rounded-lg object-cover mr-4"
-                    />
-                  ) : (
-                    <div className="h-16 w-16 bg-gray-200 rounded-lg flex items-center justify-center mr-4">
-                      <Building className="h-8 w-8 text-gray-400" />
-                    </div>
-                  )}
+                  <img
+                    src={company.logo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&size=200&background=3b82f6&color=ffffff&bold=true&format=png`}
+                    alt={`${company.name} logo`}
+                    className="h-16 w-16 rounded-lg object-cover mr-4 border border-gray-200"
+                    onError={(e) => {
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&size=200&background=6b7280&color=ffffff&bold=true&format=png`;
+                    }}
+                  />
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-900 mb-1">
                       {company.name}

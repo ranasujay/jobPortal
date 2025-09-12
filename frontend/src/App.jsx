@@ -10,6 +10,8 @@ import MyJobs from './pages/MyJobs';
 import AppliedJobs from './pages/AppliedJobs';
 import SavedJobs from './pages/SavedJobs';
 import Companies from './pages/Companies';
+import MyCompanies from './pages/MyCompanies';
+import EditCompany from './pages/EditCompany';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -47,6 +49,22 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="recruiter">
                     <EditJob />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/edit-company/:id" 
+                element={
+                  <ProtectedRoute requiredRole="recruiter">
+                    <EditCompany />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/my-companies" 
+                element={
+                  <ProtectedRoute requiredRole="recruiter">
+                    <MyCompanies />
                   </ProtectedRoute>
                 } 
               />
