@@ -92,23 +92,41 @@ exports.createJob = async (req, res) => {
     // Add user to req.body
     req.body.posted_by = req.user.id;
 
-    // Check if user has a company
-    const company = await Company.findOne({ owner: req.user.id });
+    // Check if user has a company, if not create a default one
+    let company = await Company.findOne({ owner: req.user.id });
     if (!company) {
-      return res.status(400).json({
-        success: false,
-        message: 'You must create a company profile before posting jobs'
+      // Create a company profile with the provided company name
+      const companyName = req.body.company_name || `${req.user.name}'s Company`;
+      company = await Company.create({
+        name: companyName,
+        description: 'Company profile to be updated',
+        owner: req.user.id,
+        location: req.body.location || 'Not specified',
+        industry: 'Technology', // Default industry
+        size: '1-10' // Default size
       });
+    } else if (req.body.company_name && req.body.company_name !== company.name) {
+      // Update existing company name if a new one is provided
+      company.name = req.body.company_name;
+      await company.save();
     }
 
     req.body.company = company._id;
 
-    const job = await Job.create(req.body);
+    // Remove company_name from job data as it's not part of job schema
+    const { company_name, ...jobData } = req.body;
+
+    const job = await Job.create(jobData);
+
+    // Populate the job with company info before sending response
+    const populatedJob = await Job.findById(job._id)
+      .populate('company', 'name logo_url location')
+      .populate('posted_by', 'name email');
 
     res.status(201).json({
       success: true,
       message: 'Job created successfully',
-      data: job
+      data: populatedJob
     });
 
   } catch (error) {
@@ -142,10 +160,23 @@ exports.updateJob = async (req, res) => {
       });
     }
 
-    job = await Job.findByIdAndUpdate(req.params.id, req.body, {
+    // Handle company name update if provided
+    if (req.body.company_name) {
+      let company = await Company.findOne({ owner: req.user.id });
+      if (company && req.body.company_name !== company.name) {
+        company.name = req.body.company_name;
+        await company.save();
+      }
+    }
+
+    // Remove company_name from job data as it's not part of job schema
+    const { company_name, ...jobData } = req.body;
+
+    job = await Job.findByIdAndUpdate(req.params.id, jobData, {
       new: true,
       runValidators: true
-    });
+    }).populate('company', 'name logo_url location')
+      .populate('posted_by', 'name email');
 
     res.status(200).json({
       success: true,
@@ -213,6 +244,60 @@ exports.getMyJobs = async (req, res) => {
       success: true,
       count: jobs.length,
       data: jobs
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+// @desc    Get current user's applied jobs
+// @route   GET /api/jobs/applied
+// @access  Private (candidates only)
+exports.getAppliedJobs = async (req, res) => {
+  try {
+    // Find all jobs where the current user has applied
+    const jobs = await Job.find({
+      'applications.user': req.user.id
+    })
+    .populate('company', 'name logo_url location')
+    .populate('posted_by', 'name email')
+    .sort({ 'applications.applied_at': -1 });
+
+    // Transform the data to include application details
+    const appliedJobs = jobs.map(job => {
+      // Find the user's application in this job
+      const userApplication = job.applications.find(
+        app => app.user.toString() === req.user.id
+      );
+
+      return {
+        _id: userApplication._id,
+        job: {
+          _id: job._id,
+          title: job.title,
+          description: job.description,
+          location: job.location,
+          salary_min: job.salary_min,
+          salary_max: job.salary_max,
+          job_type: job.job_type,
+          company: job.company,
+          is_active: job.is_active,
+          expires_at: job.expires_at
+        },
+        applied_at: userApplication.applied_at,
+        status: userApplication.status
+      };
+    });
+
+    res.status(200).json({
+      success: true,
+      count: appliedJobs.length,
+      data: appliedJobs
     });
 
   } catch (error) {

@@ -113,7 +113,7 @@ const JobDetails = () => {
                     {job.experience_level}
                   </span>
                 )}
-                {job.isOpen ? (
+                {job.is_active ? (
                   <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
                     Actively Hiring
                   </span>
@@ -136,7 +136,7 @@ const JobDetails = () => {
             )}
           </div>
           
-          {job.isOpen && (
+          {job.is_active && (
             <div className="flex gap-4 mt-6">
               <Button size="lg">
                 Apply Now
@@ -179,6 +179,43 @@ const JobDetails = () => {
               </CardContent>
             </Card>
           )}
+
+          {/* Required Skills */}
+          {job.skills && job.skills.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Required Skills</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {job.skills.map((skill, index) => (
+                    <span 
+                      key={index}
+                      className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium"
+                    >
+                      {skill.trim()}
+                    </span>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Benefits & Perks */}
+          {job.benefits && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Benefits & Perks</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 leading-relaxed">
+                    {job.benefits}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
         
         {/* Sidebar */}
@@ -213,7 +250,11 @@ const JobDetails = () => {
               <div>
                 <h4 className="font-medium text-gray-900 mb-1">Application Deadline</h4>
                 <p className="text-gray-600">
-                  {job.deadline ? new Date(job.deadline).toLocaleDateString() : 'Not specified'}
+                  {job.expires_at ? new Date(job.expires_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  }) : 'Not specified'}
                 </p>
               </div>
             </CardContent>

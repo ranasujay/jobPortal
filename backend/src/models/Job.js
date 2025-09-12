@@ -44,6 +44,10 @@ const jobSchema = new mongoose.Schema({
     type: String,
     trim: true
   }],
+  benefits: {
+    type: String,
+    maxlength: [2000, 'Benefits cannot be more than 2000 characters']
+  },
   company: {
     type: mongoose.Schema.ObjectId,
     ref: 'Company',

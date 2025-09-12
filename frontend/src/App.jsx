@@ -5,7 +5,9 @@ import Home from './pages/Home';
 import Jobs from './pages/Jobs';
 import JobDetails from './pages/JobDetails';
 import PostJob from './pages/PostJob';
+import EditJob from './pages/EditJob';
 import MyJobs from './pages/MyJobs';
+import AppliedJobs from './pages/AppliedJobs';
 import SavedJobs from './pages/SavedJobs';
 import Companies from './pages/Companies';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -37,6 +39,22 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="recruiter">
                     <MyJobs />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/jobs/:id/edit" 
+                element={
+                  <ProtectedRoute requiredRole="recruiter">
+                    <EditJob />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/applied-jobs" 
+                element={
+                  <ProtectedRoute requiredRole="candidate">
+                    <AppliedJobs />
                   </ProtectedRoute>
                 } 
               />

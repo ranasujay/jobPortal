@@ -25,7 +25,7 @@ export const jobsAPI = {
   // Create new job (recruiter only)
   createJob: async (jobData) => {
     const response = await api.post('/api/jobs', jobData);
-    return response.data.data;
+    return response.data;
   },
 
   // Update job (recruiter only)
@@ -82,6 +82,12 @@ export const jobsAPI = {
   // Update application status (recruiter only)
   updateApplicationStatus: async (applicationId, status) => {
     const response = await api.patch(`/api/applications/${applicationId}/status`, { status });
+    return response.data.data;
+  },
+
+  // Get current user's applied jobs
+  getAppliedJobs: async () => {
+    const response = await api.get('/api/jobs/applied');
     return response.data.data;
   },
 };

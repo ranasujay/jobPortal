@@ -9,7 +9,8 @@ import {
   Heart, 
   PlusCircle,
   Menu,
-  X 
+  X,
+  FileText
 } from 'lucide-react';
 import LoginModal from './auth/LoginModal';
 import RegisterModal from './auth/RegisterModal';
@@ -108,6 +109,17 @@ const Header = () => {
                           >
                             <Briefcase className="h-4 w-4 mr-3" />
                             My Jobs
+                          </Link>
+                        )}
+                        
+                        {user?.role === 'candidate' && (
+                          <Link
+                            to="/applied-jobs"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setShowUserMenu(false)}
+                          >
+                            <FileText className="h-4 w-4 mr-3" />
+                            Applied Jobs
                           </Link>
                         )}
                         
@@ -214,6 +226,16 @@ const Header = () => {
                         My Jobs
                       </Link>
                     </>
+                  )}
+                  
+                  {user?.role === 'candidate' && (
+                    <Link
+                      to="/applied-jobs"
+                      className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-gray-900"
+                      onClick={() => setShowMobileMenu(false)}
+                    >
+                      Applied Jobs
+                    </Link>
                   )}
                   
                   <Link
