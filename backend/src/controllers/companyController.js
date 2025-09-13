@@ -1,4 +1,5 @@
 const Company = require('../models/Company');
+const Job = require('../models/Job');
 
 // @desc    Get all companies
 // @route   GET /api/companies
@@ -142,11 +143,15 @@ exports.deleteCompany = async (req, res) => {
       });
     }
 
+    // Delete all jobs associated with this company first
+    await Job.deleteMany({ company: req.params.id });
+
+    // Then delete the company
     await Company.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       success: true,
-      message: 'Company deleted successfully'
+      message: 'Company and all associated jobs deleted successfully'
     });
 
   } catch (error) {

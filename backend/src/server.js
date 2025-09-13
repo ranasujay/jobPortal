@@ -35,6 +35,7 @@ if (process.env.NODE_ENV === 'development') {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/companies', require('./routes/companies'));
+app.use('/api/applications', require('./routes/applications'));
 
 // Health check route
 app.get('/api/health', (req, res) => {

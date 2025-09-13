@@ -4,9 +4,11 @@ import Header from './components/Header';
 import Home from './pages/Home';
 import Jobs from './pages/Jobs';
 import JobDetails from './pages/JobDetails';
+import ApplyJob from './pages/ApplyJob';
 import PostJob from './pages/PostJob';
 import EditJob from './pages/EditJob';
 import MyJobs from './pages/MyJobs';
+import JobApplications from './pages/JobApplications';
 import AppliedJobs from './pages/AppliedJobs';
 import SavedJobs from './pages/SavedJobs';
 import Companies from './pages/Companies';
@@ -27,6 +29,16 @@ function App() {
               <Route path="/jobs/:id" element={<JobDetails />} />
               <Route path="/companies" element={<Companies />} />
               
+              {/* Job Application Route */}
+              <Route 
+                path="/apply-job/:id" 
+                element={
+                  <ProtectedRoute requiredRole="candidate">
+                    <ApplyJob />
+                  </ProtectedRoute>
+                } 
+              />
+              
               {/* Protected Routes */}
               <Route 
                 path="/post-job" 
@@ -41,6 +53,14 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="recruiter">
                     <MyJobs />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/job-applications/:jobId" 
+                element={
+                  <ProtectedRoute requiredRole="recruiter">
+                    <JobApplications />
                   </ProtectedRoute>
                 } 
               />

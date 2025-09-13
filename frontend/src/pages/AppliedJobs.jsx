@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { jobsAPI } from '../api/jobs';
+import { applicationsAPI } from '../api/applications';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { 
@@ -23,6 +23,8 @@ const AppliedJobs = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [withdrawing, setWithdrawing] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Check if user is authenticated and is a candidate
   useEffect(() => {
@@ -42,7 +44,7 @@ const AppliedJobs = () => {
     const fetchAppliedJobs = async () => {
       try {
         setLoading(true);
-        const response = await jobsAPI.getAppliedJobs();
+        const response = await applicationsAPI.getMyApplications();
         setApplications(response || []);
       } catch (err) {
         console.error('Error fetching applied jobs:', err);
@@ -56,6 +58,29 @@ const AppliedJobs = () => {
       fetchAppliedJobs();
     }
   }, [isAuthenticated, user]);
+
+  // Withdraw application
+  const handleWithdraw = async (applicationId, jobTitle) => {
+    if (!window.confirm(`Are you sure you want to withdraw your application for "${jobTitle}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      setWithdrawing(applicationId);
+      await applicationsAPI.withdrawApplication(applicationId, 'Withdrawn by applicant');
+      
+      // Remove the application from the list
+      setApplications(prev => prev.filter(app => app._id !== applicationId));
+      
+      // Show success message (optional)
+      alert('Application withdrawn successfully');
+    } catch (error) {
+      console.error('Error withdrawing application:', error);
+      alert('Failed to withdraw application. Please try again.');
+    } finally {
+      setWithdrawing('');
+    }
+  };
 
   // Helper function to format date
   const formatDate = (dateString) => {
@@ -120,6 +145,12 @@ const AppliedJobs = () => {
     return stats;
   };
 
+  // Filter applications based on status
+  const filteredApplications = applications.filter(app => {
+    if (statusFilter === 'all') return true;
+    return app.status === statusFilter;
+  });
+
   // Show access denied if not candidate
   if (!isAuthenticated || (user && user.role !== 'candidate')) {
     return (
@@ -156,14 +187,33 @@ const AppliedJobs = () => {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Applied Jobs</h1>
               <p className="text-gray-600">
                 Track your job applications and their status
+                {statusFilter !== 'all' && (
+                  <span className="ml-2 text-sm">
+                    (Showing {filteredApplications.length} of {applications.length} applications)
+                  </span>
+                )}
               </p>
             </div>
-            <Link to="/jobs">
-              <Button className="flex items-center">
-                <Eye className="h-5 w-5 mr-2" />
-                Browse Jobs
-              </Button>
-            </Link>
+            <div className="flex items-center space-x-4">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">All Applications</option>
+                <option value="pending">Pending</option>
+                <option value="reviewing">Under Review</option>
+                <option value="interviewed">Interviewed</option>
+                <option value="accepted">Accepted</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <Link to="/jobs">
+                <Button className="flex items-center">
+                  <Eye className="h-5 w-5 mr-2" />
+                  Browse Jobs
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -217,13 +267,18 @@ const AppliedJobs = () => {
         )}
 
         {/* Applications List */}
-        {applications.length === 0 ? (
+        {filteredApplications.length === 0 ? (
           <Card>
             <CardContent className="p-12 text-center">
               <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No applications yet</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {statusFilter === 'all' ? 'No applications yet' : `No ${statusFilter} applications`}
+              </h3>
               <p className="text-gray-500 mb-4">
-                You haven't applied to any jobs yet. Start browsing and apply to jobs that interest you.
+                {statusFilter === 'all' 
+                  ? 'You haven\'t applied to any jobs yet. Start browsing and apply to jobs that interest you.'
+                  : `You don't have any ${statusFilter} applications at the moment.`
+                }
               </p>
               <Link to="/jobs">
                 <Button>Browse Jobs</Button>
@@ -232,7 +287,7 @@ const AppliedJobs = () => {
           </Card>
         ) : (
           <div className="space-y-4">
-            {applications.map((application) => (
+            {filteredApplications.map((application) => (
               <Card key={application._id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex justify-between items-start">
@@ -247,7 +302,16 @@ const AppliedJobs = () => {
                           </Link>
                           <div className="flex items-center text-gray-600 mt-1">
                             <Building className="h-4 w-4 mr-1" />
-                            <span className="mr-4">{application.job.company?.name || 'Company Name'}</span>
+                            <div className="flex items-center mr-4">
+                              {application.job.company?.logo_url && (
+                                <img
+                                  src={application.job.company.logo_url}
+                                  alt={application.job.company.name}
+                                  className="h-4 w-4 rounded object-cover mr-1"
+                                />
+                              )}
+                              <span>{application.job.company?.name || 'Company Name'}</span>
+                            </div>
                             <MapPin className="h-4 w-4 mr-1" />
                             <span>{application.job.location}</span>
                           </div>
@@ -273,9 +337,9 @@ const AppliedJobs = () => {
                             <Calendar className="h-4 w-4 mr-1" />
                             Applied {formatDate(application.applied_at)}
                           </div>
-                          {application.job.salary_min && application.job.salary_max && (
+                          {application.job.salary_range && (
                             <div className="text-green-600 font-medium">
-                              ${application.job.salary_min?.toLocaleString()} - ${application.job.salary_max?.toLocaleString()}
+                              {application.job.salary_range}
                             </div>
                           )}
                         </div>
@@ -287,6 +351,28 @@ const AppliedJobs = () => {
                               View Job
                             </Button>
                           </Link>
+                          
+                          {(application.status === 'pending' || application.status === 'reviewing') && !application.withdrawn && (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleWithdraw(application._id, application.job.title)}
+                              disabled={withdrawing === application._id}
+                              className="text-red-600 border-red-600 hover:bg-red-50"
+                            >
+                              {withdrawing === application._id ? (
+                                <>
+                                  <Clock className="h-4 w-4 mr-1 animate-spin" />
+                                  Withdrawing...
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle className="h-4 w-4 mr-1" />
+                                  Withdraw
+                                </>
+                              )}
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>

@@ -55,7 +55,7 @@ const EditJob = () => {
           description: job.description || '',
           requirements: job.requirements || '',
           location: job.location || '',
-          company_name: job.company_name || '',
+          company_name: job.company?.name || job.company_name || '',
           salary_min: job.salary_min || '',
           salary_max: job.salary_max || '',
           job_type: job.job_type || 'full-time',

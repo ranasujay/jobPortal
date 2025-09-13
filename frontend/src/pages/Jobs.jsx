@@ -246,17 +246,16 @@ const Jobs = () => {
                           {job.title}
                         </Link>
                         <div className="flex items-center text-gray-600 mt-1">
-                          <Building className="h-4 w-4 mr-1" />
+                          {job.company?.logo_url && (
+                            <img
+                              src={job.company.logo_url}
+                              alt={job.company.name}
+                              className="h-5 w-5 rounded object-cover mr-2"
+                            />
+                          )}
                           <span>{job.company?.name || 'Company Name'}</span>
                         </div>
                       </div>
-                      {job.company?.logo && (
-                        <img
-                          src={job.company.logo}
-                          alt={job.company.name}
-                          className="h-12 w-12 rounded object-cover ml-4"
-                        />
-                      )}
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-4">

@@ -10,7 +10,6 @@ import {
   MapPin, 
   DollarSign, 
   Calendar,
-  Edit,
   Trash2,
   Eye,
   Users,
@@ -268,15 +267,6 @@ const MyJobs = () => {
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             View
-                          </Button>
-                          
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate(`/jobs/${job._id}/edit`)}
-                          >
-                            <Edit className="h-4 w-4 mr-1" />
-                            Edit
                           </Button>
                           
                           <Button

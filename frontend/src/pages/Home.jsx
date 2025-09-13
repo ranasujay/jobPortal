@@ -338,15 +338,17 @@ const Home = () => {
                       <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
                         {job.title}
                       </h3>
-                      <p className="text-gray-600 mb-2 font-medium">{job.company?.name}</p>
+                      <div className="flex items-center text-gray-600 mb-2 font-medium">
+                        {job.company?.logo_url && (
+                          <img
+                            src={job.company.logo_url}
+                            alt={job.company.name}
+                            className="h-5 w-5 rounded object-cover mr-2"
+                          />
+                        )}
+                        <span>{job.company?.name}</span>
+                      </div>
                     </div>
-                    {job.company?.logo && (
-                      <img
-                        src={job.company.logo}
-                        alt={job.company.name}
-                        className="h-12 w-12 rounded-lg object-cover"
-                      />
-                    )}
                   </div>
                   
                   <div className="flex items-center text-sm text-gray-500 mb-4">

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { jobsAPI } from '../api/jobs';
+import { applicationsAPI } from '../api/applications';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { 
@@ -9,17 +11,28 @@ import {
   Clock, 
   Users, 
   DollarSign,
-  Briefcase
+  Briefcase,
+  Edit,
+  Trash2,
+  Eye,
+  CheckCircle
 } from 'lucide-react';
 
 const JobDetails = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [hasApplied, setHasApplied] = useState(false);
+  const [checkingApplication, setCheckingApplication] = useState(false);
 
   useEffect(() => {
     fetchJob();
-  }, [id]);
+    if (user && user.role === 'candidate') {
+      checkApplicationStatus();
+    }
+  }, [id, user]);
 
   const fetchJob = async () => {
     try {
@@ -32,6 +45,34 @@ const JobDetails = () => {
       setLoading(false);
     }
   };
+
+  const checkApplicationStatus = async () => {
+    try {
+      setCheckingApplication(true);
+      const applications = await applicationsAPI.getMyApplications();
+      const hasAppliedToJob = applications.some(app => app.job._id === id);
+      setHasApplied(hasAppliedToJob);
+    } catch (error) {
+      console.error('Error checking application status:', error);
+    } finally {
+      setCheckingApplication(false);
+    }
+  };
+
+  const handleDeleteJob = async () => {
+    if (window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+      try {
+        await jobsAPI.deleteJob(id);
+        navigate('/my-jobs');
+      } catch (error) {
+        console.error('Error deleting job:', error);
+        alert('Failed to delete job. Please try again.');
+      }
+    }
+  };
+
+  // Check if current user is the recruiter who posted this job
+  const isJobOwner = user && job && job.posted_by?._id === user.id;
 
   if (loading) {
     return (
@@ -77,7 +118,13 @@ const JobDetails = () => {
               </h1>
               
               <div className="flex items-center text-gray-600 mb-4">
-                <Building className="h-5 w-5 mr-2" />
+                {job.company?.logo_url && (
+                  <img
+                    src={job.company.logo_url}
+                    alt={job.company.name}
+                    className="h-6 w-6 rounded object-cover mr-2"
+                  />
+                )}
                 <span className="text-lg">{job.company?.name || 'Company Name'}</span>
               </div>
               
@@ -124,28 +171,84 @@ const JobDetails = () => {
                 )}
               </div>
             </div>
-            
-            {job.company?.logo && (
-              <div className="mt-4 lg:mt-0 lg:ml-8">
-                <img
-                  src={job.company.logo}
-                  alt={job.company.name}
-                  className="h-20 w-20 rounded-lg object-cover"
-                />
+          </div>
+          
+          {/* Action buttons */}
+          <div className="flex gap-4 mt-6">
+            {isJobOwner ? (
+              // Show recruiter/job owner options
+              <>
+                <Link to={`/jobs/${job._id}/edit`}>
+                  <Button size="lg" className="flex items-center gap-2">
+                    <Edit className="h-4 w-4" />
+                    Edit Job
+                  </Button>
+                </Link>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="flex items-center gap-2"
+                  onClick={() => navigate(`/job-applications/${job._id}`)}
+                >
+                  <Eye className="h-4 w-4" />
+                  View Applicants ({job.applications?.length || 0})
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="flex items-center gap-2 text-red-600 border-red-600 hover:bg-red-50"
+                  onClick={handleDeleteJob}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Job
+                </Button>
+              </>
+            ) : job.is_active ? (
+              // Show job seeker options only for active jobs
+              <>
+                {checkingApplication ? (
+                  <Button 
+                    size="lg"
+                    disabled
+                  >
+                    <Clock className="h-4 w-4 mr-2 animate-spin" />
+                    Checking...
+                  </Button>
+                ) : hasApplied ? (
+                  <Button 
+                    size="lg"
+                    variant="outline"
+                    className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                    onClick={() => navigate('/applied-jobs')}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Applied - View Status
+                  </Button>
+                ) : (
+                  <Button 
+                    size="lg"
+                    onClick={() => navigate(`/apply-job/${job._id}`)}
+                  >
+                    Apply Now
+                  </Button>
+                )}
+                <Button variant="outline" size="lg">
+                  Save Job
+                </Button>
+                
+                {hasApplied && (
+                  <p className="text-sm text-green-600 mt-2">
+                    ✓ You have already applied to this position. Click "Applied - View Status" to track your application.
+                  </p>
+                )}
+              </>
+            ) : (
+              // Show message for closed jobs
+              <div className="text-gray-500 italic">
+                This job is no longer accepting applications
               </div>
             )}
           </div>
-          
-          {job.is_active && (
-            <div className="flex gap-4 mt-6">
-              <Button size="lg">
-                Apply Now
-              </Button>
-              <Button variant="outline" size="lg">
-                Save Job
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
 
