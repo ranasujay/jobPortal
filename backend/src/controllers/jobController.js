@@ -113,8 +113,6 @@ exports.createJob = async (req, res) => {
           logo_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&size=200&background=3b82f6&color=ffffff&bold=true&format=png`,
           owner: req.user.id
         });
-        
-        console.log(`Auto-created new company: ${company.name} for user: ${req.user.name}`);
       }
     } else {
       // If no company name provided, check if user has any existing company
@@ -132,8 +130,6 @@ exports.createJob = async (req, res) => {
           logo_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(defaultName)}&size=200&background=6b7280&color=ffffff&bold=true&format=png`,
           owner: req.user.id
         });
-        
-        console.log(`Auto-created default company for user: ${req.user.name}`);
       }
     }
 

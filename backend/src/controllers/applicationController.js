@@ -40,27 +40,11 @@ const uploadToCloudinary = async (buffer, filename, folder, userId) => {
       }
     };
 
-    console.log('Uploading to Cloudinary with options:', {
-      resource_type: uploadOptions.resource_type,
-      folder: uploadOptions.folder,
-      filename: filename,
-      type: uploadOptions.type
-    });
-
     cloudinary.uploader.upload_stream(uploadOptions, (error, result) => {
       if (error) {
         console.error('Cloudinary upload error:', error);
         reject(error);
       } else {
-        console.log('Cloudinary upload success:', {
-          public_id: result.public_id,
-          resource_type: result.resource_type,
-          format: result.format,
-          secure_url: result.secure_url,
-          url: result.url, // Also log the HTTP URL
-          bytes: result.bytes,
-          type: result.type
-        });
         resolve(result);
       }
     }).end(buffer);
@@ -408,8 +392,6 @@ exports.getApplicationDocument = async (req, res) => {
     // For document access, use the secure_url directly
     // Cloudinary authenticated files are already access-controlled
     const signedUrl = document.secure_url;
-    
-    console.log('Providing document access for:', document.cloudinary_id);
 
     res.status(200).json({
       success: true,
@@ -476,8 +458,6 @@ exports.serveApplicationDocument = async (req, res) => {
       try {
         // Check if this is an old authenticated file by looking at the URL pattern
         if (cloudinaryUrl.includes('/image/upload/') || cloudinaryUrl.includes('authenticated')) {
-          console.log('Detected authenticated file, generating signed URL');
-          
           // Generate a signed URL for temporary access
           const signedUrl = cloudinary.utils.private_download_url(
             document.cloudinary_id,
@@ -488,7 +468,6 @@ exports.serveApplicationDocument = async (req, res) => {
           
           if (signedUrl) {
             cloudinaryUrl = signedUrl;
-            console.log('Generated signed URL for authenticated file');
           }
         }
       } catch (signError) {
@@ -496,14 +475,6 @@ exports.serveApplicationDocument = async (req, res) => {
         // Continue with original URL
       }
     }
-    
-    console.log('Serving document:', {
-      type,
-      cloudinary_id: document.cloudinary_id,
-      secure_url: document.secure_url,
-      final_url: cloudinaryUrl,
-      original_filename: document.original_filename
-    });
     
     // Set appropriate headers for file serving
     const contentType = document.content_type || 'application/pdf';
@@ -574,8 +545,6 @@ exports.proxyApplicationDocument = async (req, res) => {
     const cloudinaryUrl = document.secure_url;
     const parsedUrl = url.parse(cloudinaryUrl);
     const client = parsedUrl.protocol === 'https:' ? https : http;
-    
-    console.log('Proxying document from:', cloudinaryUrl);
     
     const request = client.get(cloudinaryUrl, (cloudinaryRes) => {
       if (cloudinaryRes.statusCode !== 200) {
