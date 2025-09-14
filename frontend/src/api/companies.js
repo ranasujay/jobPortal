@@ -43,4 +43,10 @@ export const companiesAPI = {
     const response = await api.get('/api/companies/my-companies');
     return response.data.data;
   },
+
+  // Get jobs by company ID
+  getCompanyJobs: async (companyId) => {
+    const response = await api.get(`/api/companies/${companyId}/jobs`);
+    return response.data.data;
+  },
 };

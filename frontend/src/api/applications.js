@@ -75,13 +75,9 @@ export const applicationsAPI = {
   // View document in browser (for PDFs and viewable files)
   viewDocument: async (applicationId, documentType) => {
     try {
-      console.log('Attempting to view document:', { applicationId, documentType });
-      
       // Try the proxy endpoint first (more reliable for authenticated files)
       const token = localStorage.getItem('token');
       const proxyUrl = `${API_BASE_URL}/applications/${applicationId}/document/${documentType}/proxy`;
-      
-      console.log('Making request to proxy endpoint:', proxyUrl);
       
       const response = await fetch(proxyUrl, {
         method: 'GET',
@@ -89,9 +85,6 @@ export const applicationsAPI = {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      console.log('Proxy response status:', response.status);
-      console.log('Proxy response headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -101,7 +94,6 @@ export const applicationsAPI = {
       
       // Get the blob and create object URL
       const blob = await response.blob();
-      console.log('Blob type:', blob.type, 'Size:', blob.size);
       
       if (blob.size === 0) {
         throw new Error('Empty file received');
@@ -130,13 +122,9 @@ export const applicationsAPI = {
   // Download document (helper function)
   downloadDocument: async (applicationId, documentType) => {
     try {
-      console.log('Attempting to download document:', { applicationId, documentType });
-      
       // Use the proxy endpoint for downloads too
       const token = localStorage.getItem('token');
       const downloadUrl = `${API_BASE_URL}/applications/${applicationId}/document/${documentType}/proxy?download=true`;
-      
-      console.log('Making download request to proxy endpoint:', downloadUrl);
       
       const response = await fetch(downloadUrl, {
         method: 'GET',
@@ -144,8 +132,6 @@ export const applicationsAPI = {
           'Authorization': `Bearer ${token}`
         }
       });
-      
-      console.log('Download response status:', response.status);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -155,7 +141,6 @@ export const applicationsAPI = {
       
       // Get the blob and trigger download
       const blob = await response.blob();
-      console.log('Download blob type:', blob.type, 'Size:', blob.size);
       
       if (blob.size === 0) {
         throw new Error('Empty file received for download');
@@ -172,8 +157,6 @@ export const applicationsAPI = {
           filename = filenameMatch[1];
         }
       }
-      
-      console.log('Downloading as:', filename);
       
       // Create download link
       const link = document.createElement('a');

@@ -1,25 +1,32 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { jobsAPI } from '../api/jobs';
 import { companiesAPI } from '../api/companies';
+import { savedJobsAPI } from '../api/savedJobs';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import AuthModal from '../components/auth/AuthModal';
 import { 
   Search, 
   MapPin, 
   Building, 
   Clock, 
   Filter,
-  Briefcase
+  Briefcase,
+  Heart
 } from 'lucide-react';
 
 const Jobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { user, isAuthenticated } = useAuth();
   const [jobs, setJobs] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [savedJobIds, setSavedJobIds] = useState(new Set());
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
@@ -31,7 +38,10 @@ const Jobs = () => {
 
   useEffect(() => {
     fetchCompanies();
-  }, []);
+    if (isAuthenticated) {
+      fetchSavedJobs();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     fetchJobs();
@@ -55,6 +65,45 @@ const Jobs = () => {
       setCompanies(companiesData);
     } catch (error) {
       console.error('Error fetching companies:', error);
+    }
+  };
+
+  const fetchSavedJobs = async () => {
+    try {
+      const savedJobs = await savedJobsAPI.getSavedJobs();
+      const savedIds = new Set(savedJobs.map(savedJob => savedJob.job._id));
+      setSavedJobIds(savedIds);
+    } catch (error) {
+      console.error('Error fetching saved jobs:', error);
+    }
+  };
+
+  const handleSaveJob = async (jobId) => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    try {
+      await savedJobsAPI.saveJob(jobId);
+      setSavedJobIds(prev => new Set([...prev, jobId]));
+    } catch (error) {
+      console.error('Error saving job:', error);
+      alert('Failed to save job');
+    }
+  };
+
+  const handleUnsaveJob = async (jobId) => {
+    try {
+      await savedJobsAPI.unsaveJob(jobId);
+      setSavedJobIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(jobId);
+        return newSet;
+      });
+    } catch (error) {
+      console.error('Error unsaving job:', error);
+      alert('Failed to unsave job');
     }
   };
 
@@ -100,48 +149,46 @@ const Jobs = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
               type="text"
-              placeholder="Search jobs, companies, or keywords..."
+              placeholder="Search for jobs, companies, or keywords..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               className="pl-10"
             />
           </div>
-          <div className="flex gap-2">
-            <Button onClick={applyFilters}>
-              Search
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Input
+              type="text"
+              placeholder="Location"
+              value={filters.location}
+              onChange={(e) => handleFilterChange('location', e.target.value)}
+              className="pl-10 w-full lg:w-64"
+            />
           </div>
+          <Button onClick={applyFilters} className="lg:w-auto">
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowFilters(!showFilters)}
+            className="lg:w-auto"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </Button>
         </div>
 
-        {/* Filters Panel */}
+        {/* Advanced Filters */}
         {showFilters && (
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle className="text-lg">Filter Jobs</CardTitle>
+              <CardTitle>Filter Jobs</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Location
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="Enter location"
-                    value={filters.location}
-                    onChange={(e) => handleFilterChange('location', e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Company
                   </label>
                   <select
@@ -157,9 +204,9 @@ const Jobs = () => {
                     ))}
                   </select>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Job Type
                   </label>
                   <select
@@ -168,15 +215,16 @@ const Jobs = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">All Types</option>
-                    <option value="full-time">Full Time</option>
-                    <option value="part-time">Part Time</option>
+                    <option value="full-time">Full-time</option>
+                    <option value="part-time">Part-time</option>
                     <option value="contract">Contract</option>
                     <option value="internship">Internship</option>
+                    <option value="freelance">Freelance</option>
                   </select>
                 </div>
-                
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Experience Level
                   </label>
                   <select
@@ -188,12 +236,13 @@ const Jobs = () => {
                     <option value="entry">Entry Level</option>
                     <option value="mid">Mid Level</option>
                     <option value="senior">Senior Level</option>
+                    <option value="lead">Lead</option>
                     <option value="executive">Executive</option>
                   </select>
                 </div>
               </div>
-              
-              <div className="flex gap-2 mt-4">
+
+              <div className="flex gap-2">
                 <Button onClick={applyFilters}>
                   Apply Filters
                 </Button>
@@ -253,9 +302,26 @@ const Jobs = () => {
                               className="h-5 w-5 rounded object-cover mr-2"
                             />
                           )}
-                          <span>{job.company?.name || 'Company Name'}</span>
+                          <Link 
+                            to={`/companies/${job.company?._id}`}
+                            className="hover:text-blue-600 transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {job.company?.name || 'Company Name'}
+                          </Link>
                         </div>
                       </div>
+                      <button
+                        onClick={() => savedJobIds.has(job._id) ? handleUnsaveJob(job._id) : handleSaveJob(job._id)}
+                        className={`ml-4 p-2 rounded-full transition-colors ${
+                          savedJobIds.has(job._id)
+                            ? 'text-red-500 hover:text-red-700 bg-red-50'
+                            : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                        }`}
+                        title={savedJobIds.has(job._id) ? 'Remove from saved jobs' : 'Save job'}
+                      >
+                        <Heart className={`h-5 w-5 ${savedJobIds.has(job._id) ? 'fill-current' : ''}`} />
+                      </button>
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500 mb-4">
@@ -311,6 +377,14 @@ const Jobs = () => {
             </Card>
           ))}
         </div>
+      )}
+      
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <AuthModal 
+          onClose={() => setShowAuthModal(false)}
+          initialMode="login"
+        />
       )}
     </div>
   );

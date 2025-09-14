@@ -2,21 +2,24 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { jobsAPI } from '../api/jobs';
+import { companiesAPI } from '../api/companies';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card } from '../components/ui/Card';
-import { PlusCircle, ArrowLeft } from 'lucide-react';
+import { PlusCircle, ArrowLeft, Building2, ExternalLink } from 'lucide-react';
 
 const PostJob = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [companies, setCompanies] = useState([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     requirements: '',
     location: '',
-    company_name: '',
+    company: '', // Changed from company_name to company (will store company ID)
     salary_min: '',
     salary_max: '',
     job_type: 'full-time',
@@ -26,7 +29,7 @@ const PostJob = () => {
     expires_at: ''
   });
 
-  // Check if user is recruiter
+  // Check if user is recruiter and fetch companies
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/');
@@ -37,7 +40,21 @@ const PostJob = () => {
       navigate('/jobs');
       return;
     }
+
+    fetchCompanies();
   }, [user, isAuthenticated, navigate]);
+
+  const fetchCompanies = async () => {
+    try {
+      setLoadingCompanies(true);
+      const data = await companiesAPI.getCompanies();
+      setCompanies(data);
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -49,6 +66,13 @@ const PostJob = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate company selection
+    if (!formData.company) {
+      alert('Please select a company or create a new one first.');
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -71,14 +95,7 @@ const PostJob = () => {
       const response = await jobsAPI.createJob(jobData);
       
       if (response) {
-        let successMessage = 'Job posted successfully!';
-        
-        // Check if a new company was created
-        if (response.companyCreated) {
-          successMessage += '\n\nA new company profile has been created. You can update the company details from "My Companies" section.';
-        }
-        
-        alert(successMessage);
+        alert('Job posted successfully!');
         navigate('/my-jobs');
       }
     } catch (error) {
@@ -145,25 +162,61 @@ const PostJob = () => {
               />
             </div>
 
-            {/* Company Name */}
+            {/* Company Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Company Name *
+                Company *
               </label>
-              <Input
-                type="text"
-                name="company_name"
-                value={formData.company_name}
-                onChange={handleChange}
-                required
-                placeholder="e.g. Tech Solutions Inc."
-                className="w-full"
-              />
-              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                <p className="text-sm text-blue-700">
-                  <span className="font-medium">💡 Auto-Company Creation:</span> If this company doesn't exist in your profile, 
-                  we'll automatically create it for you. You can edit the company details later from "My Companies".
-                </p>
+              {loadingCompanies ? (
+                <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50">
+                  Loading companies...
+                </div>
+              ) : companies.length > 0 ? (
+                <select
+                  name="company"
+                  value={formData.company}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select a company</option>
+                  {companies.map((company) => (
+                    <option key={company._id} value={company._id}>
+                      {company.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="space-y-3">
+                  <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                    No companies found
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <div className="flex items-start space-x-3">
+                  <Building2 className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">
+                      Don't see your company?
+                    </p>
+                    <p className="text-sm text-blue-700 mt-1">
+                      If the company you want to post for doesn't exist in the list above, 
+                      you can create a new company profile and then return to post this job.
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate('/create-company')}
+                      className="mt-2 text-blue-700 border-blue-300 hover:bg-blue-100"
+                    >
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Create New Company
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
 

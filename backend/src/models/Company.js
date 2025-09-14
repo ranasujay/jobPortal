@@ -5,6 +5,7 @@ const companySchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide company name'],
     trim: true,
+    unique: true,
     maxlength: [100, 'Company name cannot be more than 100 characters']
   },
   description: {

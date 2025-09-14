@@ -1,5 +1,7 @@
 const Job = require('../models/Job');
 const Company = require('../models/Company');
+const Application = require('../models/Application');
+const cloudinary = require('../config/cloudinary');
 
 // @desc    Get all jobs
 // @route   GET /api/jobs
@@ -70,9 +72,18 @@ exports.getJob = async (req, res) => {
       });
     }
 
+    // Get applications count for this job
+    const applicationsCount = await Application.countDocuments({ job: req.params.id });
+
+    // Add applications count to job data
+    const jobWithApplications = {
+      ...job.toObject(),
+      applications: { length: applicationsCount }
+    };
+
     res.status(200).json({
       success: true,
-      data: job
+      data: jobWithApplications
     });
 
   } catch (error) {
@@ -92,53 +103,27 @@ exports.createJob = async (req, res) => {
     // Add user to req.body
     req.body.posted_by = req.user.id;
 
-    let company;
-    
-    if (req.body.company_name) {
-      // Check if company with this name already exists for this user
-      company = await Company.findOne({ 
-        name: req.body.company_name.trim(),
-        owner: req.user.id 
+    // Validate that company exists and belongs to the user
+    if (!req.body.company) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please select a company'
       });
-      
-      if (!company) {
-        // Create new company with the provided name
-        const companyName = req.body.company_name.trim();
-        company = await Company.create({
-          name: companyName,
-          description: `Company profile for ${companyName}. Please update with more details.`,
-          location: req.body.location || 'Location to be updated',
-          industry: 'Industry to be specified',
-          size: '1-10',
-          logo_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(companyName)}&size=200&background=3b82f6&color=ffffff&bold=true&format=png`,
-          owner: req.user.id
-        });
-      }
-    } else {
-      // If no company name provided, check if user has any existing company
-      company = await Company.findOne({ owner: req.user.id });
-      
-      if (!company) {
-        // Create a default company
-        const defaultName = `${req.user.name}'s Company`;
-        company = await Company.create({
-          name: defaultName,
-          description: 'Default company profile. Please update with your company details.',
-          location: 'Location to be updated',
-          industry: 'Industry to be specified',
-          size: '1-10',
-          logo_url: `https://ui-avatars.com/api/?name=${encodeURIComponent(defaultName)}&size=200&background=6b7280&color=ffffff&bold=true&format=png`,
-          owner: req.user.id
-        });
-      }
     }
 
-    req.body.company = company._id;
+    const company = await Company.findOne({
+      _id: req.body.company,
+      owner: req.user.id
+    });
 
-    // Remove company_name from job data as it's not part of job schema
-    const { company_name, ...jobData } = req.body;
+    if (!company) {
+      return res.status(400).json({
+        success: false,
+        message: 'Company not found or you do not have permission to post jobs for this company'
+      });
+    }
 
-    const job = await Job.create(jobData);
+    const job = await Job.create(req.body);
 
     // Populate the job with company info before sending response
     const populatedJob = await Job.findById(job._id)
@@ -148,8 +133,7 @@ exports.createJob = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Job created successfully',
-      data: populatedJob,
-      companyCreated: company.createdAt.getTime() === company.updatedAt.getTime() // Indicates if company was just created
+      data: populatedJob
     });
 
   } catch (error) {
@@ -238,11 +222,36 @@ exports.deleteJob = async (req, res) => {
       });
     }
 
+    // Get all applications for this job to clean up their files
+    const applications = await Application.find({ job: req.params.id });
+
+    // Delete files from Cloudinary for each application
+    for (const application of applications) {
+      try {
+        // Delete resume file if exists
+        if (application.documents?.resume?.cloudinary_id) {
+          await cloudinary.uploader.destroy(application.documents.resume.cloudinary_id);
+        }
+        
+        // Delete cover letter file if exists
+        if (application.documents?.cover_letter?.cloudinary_id) {
+          await cloudinary.uploader.destroy(application.documents.cover_letter.cloudinary_id);
+        }
+      } catch (fileError) {
+        console.error('Error deleting files from Cloudinary:', fileError);
+        // Continue with deletion even if file cleanup fails
+      }
+    }
+
+    // Delete all applications related to this job
+    await Application.deleteMany({ job: req.params.id });
+
+    // Then delete the job
     await Job.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       success: true,
-      message: 'Job deleted successfully'
+      message: 'Job and all related applications deleted successfully'
     });
 
   } catch (error) {

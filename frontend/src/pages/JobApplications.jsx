@@ -143,6 +143,14 @@ const JobApplications = () => {
 
   const handleDownloadDocument = async (applicationId, documentType) => {
     try {
+      // Find the application and check if document exists
+      const application = applications.find(app => app._id === applicationId);
+      
+      if (!application?.documents?.[documentType] || !application.documents[documentType].secure_url) {
+        alert(`No ${documentType === 'cover_letter' ? 'cover letter' : 'resume'} uploaded for this application`);
+        return;
+      }
+
       const docKey = `${applicationId}-${documentType}`;
       setDownloadingDoc(docKey);
       
@@ -165,6 +173,14 @@ const JobApplications = () => {
 
   const handleViewDocument = async (applicationId, documentType) => {
     try {
+      // Find the application and check if document exists
+      const application = applications.find(app => app._id === applicationId);
+      
+      if (!application?.documents?.[documentType] || !application.documents[documentType].secure_url) {
+        alert(`No ${documentType === 'cover_letter' ? 'cover letter' : 'resume'} uploaded for this application`);
+        return;
+      }
+
       await applicationsAPI.viewDocument(applicationId, documentType);
     } catch (error) {
       console.error('Error viewing document:', error);
@@ -174,7 +190,11 @@ const JobApplications = () => {
 
   const handleNotesUpdate = async (applicationId, notes) => {
     try {
-      // For now, we'll store notes locally. In a real app, you'd save to backend
+      // Save notes to backend
+      const application = applications.find(app => app._id === applicationId);
+      await applicationsAPI.updateApplicationStatus(applicationId, application.status, notes);
+      
+      // Update local state after successful API call
       setApplications(prev => 
         prev.map(app => 
           app._id === applicationId 
@@ -491,62 +511,74 @@ const JobApplications = () => {
                       </div>
 
                       {/* Documents */}
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {application.documents?.resume && (
-                          <div className="flex gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewDocument(application._id, 'resume')}
-                              className="flex items-center"
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View Resume
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDownloadDocument(application._id, 'resume')}
-                              disabled={downloadingDoc === `${application._id}-resume`}
-                              className="flex items-center"
-                            >
-                              <FileText className="h-4 w-4 mr-1" />
-                              {downloadingDoc === `${application._id}-resume` ? (
-                                <Clock className="h-3 w-3 ml-1 animate-spin" />
-                              ) : (
-                                <Download className="h-3 w-3 ml-1" />
-                              )}
-                            </Button>
-                          </div>
-                        )}
+                      <div className="space-y-3 mb-4">
+                        {/* Resume Section */}
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-700 mb-1">Resume</h5>
+                          {application.documents?.resume ? (
+                            <div className="flex gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewDocument(application._id, 'resume')}
+                                className="flex items-center"
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Resume
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownloadDocument(application._id, 'resume')}
+                                disabled={downloadingDoc === `${application._id}-resume`}
+                                className="flex items-center"
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                {downloadingDoc === `${application._id}-resume` ? (
+                                  <Clock className="h-3 w-3 ml-1 animate-spin" />
+                                ) : (
+                                  <Download className="h-3 w-3 ml-1" />
+                                )}
+                              </Button>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500 italic">No resume uploaded</p>
+                          )}
+                        </div>
                         
-                        {application.documents?.cover_letter && (
-                          <div className="flex gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewDocument(application._id, 'cover_letter')}
-                              className="flex items-center"
-                            >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View Cover Letter
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDownloadDocument(application._id, 'cover_letter')}
-                              disabled={downloadingDoc === `${application._id}-cover_letter`}
-                              className="flex items-center"
-                            >
-                              <FileText className="h-4 w-4 mr-1" />
-                              {downloadingDoc === `${application._id}-cover_letter` ? (
-                                <Clock className="h-3 w-3 ml-1 animate-spin" />
-                              ) : (
-                                <Download className="h-3 w-3 ml-1" />
-                              )}
-                            </Button>
-                          </div>
-                        )}
+                        {/* Cover Letter Section */}
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-700 mb-1">Cover Letter</h5>
+                          {application.documents?.cover_letter ? (
+                            <div className="flex gap-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleViewDocument(application._id, 'cover_letter')}
+                                className="flex items-center"
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View Cover Letter
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownloadDocument(application._id, 'cover_letter')}
+                                disabled={downloadingDoc === `${application._id}-cover_letter`}
+                                className="flex items-center"
+                              >
+                                <FileText className="h-4 w-4 mr-1" />
+                                {downloadingDoc === `${application._id}-cover_letter` ? (
+                                  <Clock className="h-3 w-3 ml-1 animate-spin" />
+                                ) : (
+                                  <Download className="h-3 w-3 ml-1" />
+                                )}
+                              </Button>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-500 italic">No cover letter uploaded</p>
+                          )}
+                        </div>
                       </div>
 
                       {/* Application Date */}

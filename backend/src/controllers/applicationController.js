@@ -332,16 +332,12 @@ exports.withdrawApplication = async (req, res) => {
       });
     }
 
-    // Withdraw application
-    application.withdrawn = true;
-    application.withdrawn_at = new Date();
-    application.withdrawal_reason = reason;
-    await application.save();
+    // Delete the application completely
+    await Application.findByIdAndDelete(id);
 
     res.status(200).json({
       success: true,
-      message: 'Application withdrawn successfully',
-      data: application
+      message: 'Application withdrawn successfully'
     });
 
   } catch (error) {

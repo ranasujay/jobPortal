@@ -6,7 +6,8 @@ const {
   updateCompany,
   deleteCompany,
   getMyCompany,
-  getMyCompanies
+  getMyCompanies,
+  getCompanyJobs
 } = require('../controllers/companyController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -23,5 +24,7 @@ router.route('/:id')
   .get(getCompany)
   .put(protect, authorize('recruiter'), updateCompany)
   .delete(protect, authorize('recruiter'), deleteCompany);
+
+router.get('/:id/jobs', getCompanyJobs);
 
 module.exports = router;

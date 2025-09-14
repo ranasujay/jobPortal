@@ -3,8 +3,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { jobsAPI } from '../api/jobs';
 import { applicationsAPI } from '../api/applications';
+import { savedJobsAPI } from '../api/savedJobs';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import AuthModal from '../components/auth/AuthModal';
 import { 
   MapPin, 
   Building, 
@@ -15,24 +17,30 @@ import {
   Edit,
   Trash2,
   Eye,
-  CheckCircle
+  CheckCircle,
+  Heart,
+  ArrowLeft
 } from 'lucide-react';
 
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [hasApplied, setHasApplied] = useState(false);
   const [checkingApplication, setCheckingApplication] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [savingJob, setSavingJob] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     fetchJob();
-    if (user && user.role === 'candidate') {
+    if (isAuthenticated && user && user.role === 'candidate') {
       checkApplicationStatus();
+      checkSavedStatus();
     }
-  }, [id, user]);
+  }, [id, isAuthenticated, user]);
 
   const fetchJob = async () => {
     try {
@@ -57,6 +65,47 @@ const JobDetails = () => {
     } finally {
       setCheckingApplication(false);
     }
+  };
+
+  const checkSavedStatus = async () => {
+    try {
+      const isJobSaved = await savedJobsAPI.checkJobSaved(id);
+      setIsSaved(isJobSaved);
+    } catch (error) {
+      console.error('Error checking saved status:', error);
+    }
+  };
+
+  const handleSaveJob = async () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    try {
+      setSavingJob(true);
+      if (isSaved) {
+        await savedJobsAPI.unsaveJob(id);
+        setIsSaved(false);
+      } else {
+        await savedJobsAPI.saveJob(id);
+        setIsSaved(true);
+      }
+    } catch (error) {
+      console.error('Error saving/unsaving job:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to save job. Please try again.';
+      alert(errorMessage);
+    } finally {
+      setSavingJob(false);
+    }
+  };
+
+  const handleApplyJob = () => {
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    navigate(`/apply-job/${job._id}`);
   };
 
   const handleDeleteJob = async () => {
@@ -108,6 +157,16 @@ const JobDetails = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Back Button */}
+      <Button 
+        variant="outline" 
+        onClick={() => navigate(-1)}
+        className="mb-6 flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Button>
+
       {/* Job Header */}
       <Card className="mb-8">
         <CardContent className="p-8">
@@ -125,7 +184,12 @@ const JobDetails = () => {
                     className="h-6 w-6 rounded object-cover mr-2"
                   />
                 )}
-                <span className="text-lg">{job.company?.name || 'Company Name'}</span>
+                <Link 
+                  to={`/companies/${job.company?._id}`}
+                  className="text-lg hover:text-blue-600 transition-colors"
+                >
+                  {job.company?.name || 'Company Name'}
+                </Link>
               </div>
               
               <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 mb-6">
@@ -203,8 +267,8 @@ const JobDetails = () => {
                   Delete Job
                 </Button>
               </>
-            ) : job.is_active ? (
-              // Show job seeker options only for active jobs
+            ) : job.is_active && isAuthenticated && user.role === 'candidate' ? (
+              // Show job seeker options only for active jobs and candidates
               <>
                 {checkingApplication ? (
                   <Button 
@@ -227,13 +291,24 @@ const JobDetails = () => {
                 ) : (
                   <Button 
                     size="lg"
-                    onClick={() => navigate(`/apply-job/${job._id}`)}
+                    onClick={handleApplyJob}
                   >
                     Apply Now
                   </Button>
                 )}
-                <Button variant="outline" size="lg">
-                  Save Job
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={handleSaveJob}
+                  disabled={savingJob}
+                  className={`flex items-center gap-2 ${
+                    isSaved 
+                      ? 'text-red-500 border-red-500 hover:bg-red-50' 
+                      : 'text-gray-600 border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  <Heart className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
+                  {savingJob ? 'Saving...' : (isSaved ? 'Saved' : 'Save Job')}
                 </Button>
                 
                 {hasApplied && (
@@ -242,6 +317,30 @@ const JobDetails = () => {
                   </p>
                 )}
               </>
+            ) : job.is_active && !isAuthenticated ? (
+              // Show login prompt for non-logged in users
+              <div className="flex gap-4">
+                <Button 
+                  size="lg"
+                  onClick={() => setShowAuthModal(true)}
+                >
+                  Login to Apply
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  onClick={() => setShowAuthModal(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Heart className="h-4 w-4" />
+                  Login to Save
+                </Button>
+              </div>
+            ) : job.is_active && isAuthenticated && user.role !== 'candidate' ? (
+              // Show message for non-candidates (recruiters)
+              <div className="text-gray-500 italic">
+                Only candidates can apply to jobs
+              </div>
             ) : (
               // Show message for closed jobs
               <div className="text-gray-500 italic">
@@ -364,6 +463,14 @@ const JobDetails = () => {
           </Card>
         </div>
       </div>
+      
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <AuthModal 
+          onClose={() => setShowAuthModal(false)}
+          initialMode="login"
+        />
+      )}
     </div>
   );
 };

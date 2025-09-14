@@ -59,8 +59,22 @@ exports.getCompany = async (req, res) => {
 // @access  Private (recruiters only)
 exports.createCompany = async (req, res) => {
   try {
+    // Check if company name already exists (case-insensitive)
+    const companyName = req.body.name.trim();
+    const existingCompany = await Company.findOne({ 
+      name: { $regex: new RegExp(`^${companyName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } 
+    });
+
+    if (existingCompany) {
+      return res.status(400).json({
+        success: false,
+        message: 'A company with this name already exists'
+      });
+    }
+
     // Add user to req.body
     req.body.owner = req.user.id;
+    req.body.name = companyName; // Use the trimmed name
 
     const company = await Company.create(req.body);
 
@@ -71,7 +85,26 @@ exports.createCompany = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    // Handle duplicate key error (MongoDB unique constraint) - don't log these as errors
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.name) {
+      return res.status(400).json({
+        success: false,
+        message: 'A company with this name already exists'
+      });
+    }
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: messages.join('. ')
+      });
+    }
+    
+    // Log unexpected errors only
+    console.error('Unexpected error in createCompany:', error);
+    
     res.status(500).json({
       success: false,
       message: 'Server error'
@@ -203,6 +236,40 @@ exports.getMyCompany = async (req, res) => {
     res.status(200).json({
       success: true,
       data: company
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};
+
+// @desc    Get jobs by company
+// @route   GET /api/companies/:id/jobs
+// @access  Public
+exports.getCompanyJobs = async (req, res) => {
+  try {
+    const company = await Company.findById(req.params.id);
+
+    if (!company) {
+      return res.status(404).json({
+        success: false,
+        message: 'Company not found'
+      });
+    }
+
+    const jobs = await Job.find({ company: req.params.id })
+      .populate('company', 'name logo_url location industry')
+      .populate('posted_by', 'name')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: jobs.length,
+      data: jobs
     });
 
   } catch (error) {

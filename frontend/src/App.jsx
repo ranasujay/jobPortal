@@ -12,7 +12,9 @@ import JobApplications from './pages/JobApplications';
 import AppliedJobs from './pages/AppliedJobs';
 import SavedJobs from './pages/SavedJobs';
 import Companies from './pages/Companies';
+import CompanyDetails from './pages/CompanyDetails';
 import MyCompanies from './pages/MyCompanies';
+import CreateCompany from './pages/CreateCompany';
 import EditCompany from './pages/EditCompany';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -28,6 +30,7 @@ function App() {
               <Route path="/jobs" element={<Jobs />} />
               <Route path="/jobs/:id" element={<JobDetails />} />
               <Route path="/companies" element={<Companies />} />
+              <Route path="/companies/:id" element={<CompanyDetails />} />
               
               {/* Job Application Route */}
               <Route 
@@ -69,6 +72,14 @@ function App() {
                 element={
                   <ProtectedRoute requiredRole="recruiter">
                     <EditJob />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/create-company" 
+                element={
+                  <ProtectedRoute requiredRole="recruiter">
+                    <CreateCompany />
                   </ProtectedRoute>
                 } 
               />
