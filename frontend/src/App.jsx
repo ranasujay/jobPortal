@@ -18,6 +18,7 @@ import CreateCompany from './pages/CreateCompany';
 import EditCompany from './pages/EditCompany';
 import ProtectedRoute from './components/ProtectedRoute';
 
+
 function App() {
   return (
     <AuthProvider>
