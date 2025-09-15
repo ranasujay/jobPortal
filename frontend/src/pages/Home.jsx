@@ -440,6 +440,13 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="py-8 bg-gray-900 text-center">
+        <p className="text-gray-400">
+          Made by <span className="text-white font-semibold">Sujay Rana</span>
+        </p>
+      </footer>
     </div>
   );
 };
