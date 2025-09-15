@@ -16,6 +16,7 @@ import CompanyDetails from './pages/CompanyDetails';
 import MyCompanies from './pages/MyCompanies';
 import CreateCompany from './pages/CreateCompany';
 import EditCompany from './pages/EditCompany';
+import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 
 
@@ -113,6 +114,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <SavedJobs />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
                   </ProtectedRoute>
                 } 
               />

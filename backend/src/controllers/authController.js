@@ -141,3 +141,92 @@ exports.getMe = async (req, res) => {
     });
   }
 };
+
+// @desc    Update user profile
+// @route   PUT /api/auth/profile
+// @access  Private
+exports.updateProfile = async (req, res) => {
+  try {
+    const {
+      name,
+      phone,
+      location,
+      bio,
+      current_position,
+      experience_level,
+      skills,
+      education,
+      portfolio_links
+    } = req.body;
+
+    // Find user
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Update basic info
+    if (name) user.name = name;
+
+    // Update profile fields
+    if (!user.profile) {
+      user.profile = {};
+    }
+    
+    if (phone !== undefined) user.profile.phone = phone;
+    if (location !== undefined) user.profile.location = location;
+    if (bio !== undefined) user.profile.bio = bio;
+    if (current_position !== undefined) user.profile.current_position = current_position;
+    if (experience_level !== undefined) user.profile.experience_level = experience_level;
+    
+    // Parse JSON strings for arrays
+    if (skills !== undefined) {
+      try {
+        user.profile.skills = typeof skills === 'string' ? JSON.parse(skills) : skills;
+      } catch (error) {
+        user.profile.skills = [];
+      }
+    }
+    
+    if (education !== undefined) user.profile.education = education;
+    
+    if (portfolio_links !== undefined) {
+      try {
+        user.profile.portfolio_links = typeof portfolio_links === 'string' ? JSON.parse(portfolio_links) : portfolio_links;
+      } catch (error) {
+        user.profile.portfolio_links = [];
+      }
+    }
+
+    // Handle avatar upload if file is present
+    if (req.file) {
+      const avatarUrl = req.file.secure_url || req.file.path;
+      user.profile.avatar = avatarUrl;
+    }
+
+    // Save user
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profile: user.profile
+      }
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+};

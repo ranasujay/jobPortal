@@ -31,10 +31,42 @@ const userSchema = new mongoose.Schema({
   },
   profile: {
     avatar: String,
-    bio: String,
-    skills: [String],
-    experience: String,
-    education: String,
+    bio: {
+      type: String,
+      maxlength: [500, 'Bio cannot be more than 500 characters']
+    },
+    phone: {
+      type: String,
+      maxlength: [20, 'Phone number cannot be more than 20 characters']
+    },
+    location: {
+      type: String,
+      maxlength: [100, 'Location cannot be more than 100 characters']
+    },
+    current_position: {
+      type: String,
+      maxlength: [100, 'Current position cannot be more than 100 characters']
+    },
+    experience_level: {
+      type: String,
+      enum: ['entry', 'mid', 'senior', 'executive'],
+    },
+    skills: [{
+      type: String,
+      trim: true,
+      maxlength: [50, 'Skill name cannot be more than 50 characters']
+    }],
+    education: {
+      type: String,
+      maxlength: [1000, 'Education cannot be more than 1000 characters']
+    },
+    portfolio_links: [{
+      type: String,
+      match: [
+        /^https?:\/\/.+/,
+        'Please provide valid URLs starting with http:// or https://'
+      ]
+    }],
     resume: String
   },
   company: {

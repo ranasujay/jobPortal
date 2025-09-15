@@ -15,6 +15,19 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUserData = async () => {
+    try {
+      const response = await api.get('/api/auth/me');
+      const { user: userData } = response.data;
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      return userData;
+    } catch (error) {
+      console.error('Error refreshing user data:', error);
+      // If refresh fails, keep current user data
+    }
+  };
+
   useEffect(() => {
     // Check if user is logged in on app start
     const token = localStorage.getItem('token');
@@ -23,6 +36,8 @@ export const AuthProvider = ({ children }) => {
     if (token && savedUser) {
       try {
         setUser(JSON.parse(savedUser));
+        // Refresh user data from server to get latest profile info
+        refreshUserData();
       } catch (error) {
         console.error('Error parsing saved user:', error);
         localStorage.removeItem('token');
@@ -75,6 +90,41 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUserProfile = async (profileData) => {
+    try {
+      const formData = new FormData();
+      
+      // Add all profile fields to FormData
+      Object.keys(profileData).forEach(key => {
+        if (key === 'avatar' && profileData[key]) {
+          formData.append('avatar', profileData[key]);
+        } else if (key === 'skills' || key === 'portfolio_links') {
+          // Handle arrays
+          formData.append(key, JSON.stringify(profileData[key]));
+        } else if (profileData[key] !== null && profileData[key] !== undefined && profileData[key] !== '') {
+          formData.append(key, profileData[key]);
+        }
+      });
+
+      const response = await api.put('/api/auth/profile', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      
+      const { user: updatedUser } = response.data;
+      
+      // Update local storage and state
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      
+      return updatedUser;
+    } catch (error) {
+      console.error('Profile update error:', error);
+      throw new Error(error.response?.data?.message || 'Profile update failed');
+    }
+  };
+
   const isAuthenticated = !!user;
 
   const value = {
@@ -82,6 +132,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    updateUserProfile,
+    refreshUserData,
     isAuthenticated,
     loading,
   };

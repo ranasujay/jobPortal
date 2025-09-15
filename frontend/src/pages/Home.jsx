@@ -79,25 +79,25 @@ const Home = () => {
 
   const testimonials = [
     {
-      name: "Sarah Johnson",
+      name: "David Johnson",
       role: "Software Engineer at Google",
       content: "JobPortal helped me land my dream job at Google. The platform is intuitive and the job recommendations were spot-on!",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b5e5?w=80&h=80&fit=crop&crop=face"
+      avatar: "https://randomuser.me/api/portraits/men/46.jpg"
     },
     {
       name: "Michael Chen",
       role: "Product Manager at Microsoft",
       content: "As a recruiter, I love how easy it is to find qualified candidates. The filtering system is excellent.",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face"
+      avatar: "https://randomuser.me/api/portraits/men/32.jpg"
     },
     {
       name: "Emily Davis",
       role: "UX Designer at Apple",
       content: "The best job platform I've used. Clean interface, relevant jobs, and great company profiles.",
       rating: 5,
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face"
+      avatar: "https://randomuser.me/api/portraits/women/68.jpg"
     }
   ];
 
