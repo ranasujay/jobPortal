@@ -6,6 +6,7 @@ import { applicationsAPI } from '../api/applications';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { formatSalaryFull } from '../utils/formatSalary';
 import { 
   Upload,
   FileText,
@@ -286,11 +287,7 @@ const ApplyJob = () => {
                   <div className="flex items-center text-green-600">
                     <DollarSign className="h-4 w-4 mr-2" />
                     <span>
-                      {job.salary_min && job.salary_max
-                        ? `$${job.salary_min.toLocaleString()} - $${job.salary_max.toLocaleString()}`
-                        : job.salary_min
-                        ? `From $${job.salary_min.toLocaleString()}`
-                        : `Up to $${job.salary_max.toLocaleString()}`}
+                      {formatSalaryFull(job.salary_min, job.salary_max)}
                     </span>
                   </div>
                 )}

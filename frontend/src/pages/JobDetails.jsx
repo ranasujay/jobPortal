@@ -7,6 +7,7 @@ import { savedJobsAPI } from '../api/savedJobs';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import AuthModal from '../components/auth/AuthModal';
+import { formatSalaryFull } from '../utils/formatSalary';
 import { 
   MapPin, 
   Building, 
@@ -207,10 +208,10 @@ const JobDetails = () => {
                     {job.applications.length} applicants
                   </div>
                 )}
-                {job.salary_range && (
+                {(job.salary_min || job.salary_max) && (
                   <div className="flex items-center text-green-600 font-medium">
                     <DollarSign className="h-4 w-4 mr-1" />
-                    {job.salary_range}
+                    {formatSalaryFull(job.salary_min, job.salary_max)}
                   </div>
                 )}
               </div>
@@ -442,10 +443,10 @@ const JobDetails = () => {
                 <p className="text-gray-600">{job.experience_level || 'Mid Level'}</p>
               </div>
               
-              {job.salary_range && (
+              {(job.salary_min || job.salary_max) && (
                 <div>
                   <h4 className="font-medium text-gray-900 mb-1">Salary Range</h4>
-                  <p className="text-gray-600">{job.salary_range}</p>
+                  <p className="text-gray-600">{formatSalaryFull(job.salary_min, job.salary_max)}</p>
                 </div>
               )}
               

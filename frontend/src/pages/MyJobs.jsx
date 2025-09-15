@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { jobsAPI } from '../api/jobs';
 import { Button } from '../components/ui/Button';
 import { Card } from '../components/ui/Card';
+import { formatSalary } from '../utils/formatSalary';
 import { 
   Briefcase, 
   PlusCircle, 
@@ -69,13 +70,6 @@ const MyJobs = () => {
       console.error('Error deleting job:', err);
       alert('Failed to delete job');
     }
-  };
-
-  const formatSalary = (min, max) => {
-    if (!min && !max) return 'Salary not specified';
-    if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()}`;
-    if (min) return `From $${min.toLocaleString()}`;
-    if (max) return `Up to $${max.toLocaleString()}`;
   };
 
   const formatDate = (dateString) => {

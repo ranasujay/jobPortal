@@ -264,7 +264,7 @@ const EditJob = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="salary_min" className="block text-sm font-medium text-gray-700 mb-2">
-                  Minimum Salary ($)
+                  Minimum Salary (₹)
                 </label>
                 <Input
                   type="number"
@@ -272,13 +272,13 @@ const EditJob = () => {
                   name="salary_min"
                   value={formData.salary_min}
                   onChange={handleChange}
-                  placeholder="e.g. 80000"
+                  placeholder="e.g. 800000"
                 />
               </div>
 
               <div>
                 <label htmlFor="salary_max" className="block text-sm font-medium text-gray-700 mb-2">
-                  Maximum Salary ($)
+                  Maximum Salary (₹)
                 </label>
                 <Input
                   type="number"
@@ -286,7 +286,7 @@ const EditJob = () => {
                   name="salary_max"
                   value={formData.salary_max}
                   onChange={handleChange}
-                  placeholder="e.g. 120000"
+                  placeholder="e.g. 1200000"
                 />
               </div>
             </div>

@@ -8,6 +8,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import AuthModal from '../components/auth/AuthModal';
+import { formatSalary } from '../utils/formatSalary';
 import { 
   Search, 
   MapPin, 
@@ -333,9 +334,9 @@ const Jobs = () => {
                         <Clock className="h-4 w-4 mr-1" />
                         {new Date(job.createdAt).toLocaleDateString()}
                       </div>
-                      {job.salary_range && (
+                      {(job.salary_min || job.salary_max) && (
                         <div className="text-green-600 font-medium">
-                          {job.salary_range}
+                          {formatSalary(job.salary_min, job.salary_max)}
                         </div>
                       )}
                     </div>
