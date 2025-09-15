@@ -56,6 +56,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
       
+      // Refresh user data to ensure we have the latest profile information
+      await refreshUserData();
+      
       return userData;
     } catch (error) {
       console.error('Login error:', error);
