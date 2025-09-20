@@ -1,7 +1,5 @@
 import api from '../utils/api';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000')  + '/api';
-
 // Applications API calls
 export const applicationsAPI = {
   // Apply to a job
@@ -77,7 +75,7 @@ export const applicationsAPI = {
     try {
       // Try the proxy endpoint first (more reliable for authenticated files)
       const token = localStorage.getItem('token');
-      const proxyUrl = `${API_BASE_URL}/applications/${applicationId}/document/${documentType}/proxy`;
+      const proxyUrl = `${api.defaults.baseURL}/api/applications/${applicationId}/document/${documentType}/proxy`;
       
       const response = await fetch(proxyUrl, {
         method: 'GET',
@@ -124,7 +122,7 @@ export const applicationsAPI = {
     try {
       // Use the proxy endpoint for downloads too
       const token = localStorage.getItem('token');
-      const downloadUrl = `${API_BASE_URL}/applications/${applicationId}/document/${documentType}/proxy?download=true`;
+      const downloadUrl = `${api.defaults.baseURL}/api/applications/${applicationId}/document/${documentType}/proxy?download=true`;
       
       const response = await fetch(downloadUrl, {
         method: 'GET',
