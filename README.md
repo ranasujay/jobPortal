@@ -2,6 +2,9 @@
 
 A modern, full-stack job portal application built with **React + Vite** frontend and **Node.js + Express** backend, featuring real-time job postings, company management, and user authentication.
 
+## Design
+   ![Design_Image](https://github.com/ranasujay/jobPortal/blob/main/jobPortal.excalidraw.png)
+
 ## 🌟 Features
 
 ### For Job Seekers
